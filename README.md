@@ -41,7 +41,7 @@ Git solves this for code. There's nothing like it for the abstract mental state 
 ### Basic,  run directly
 
 ```bash
-git clone https://github.com/yourhandle/cycle-close
+git clone https://github.com/mohammed-bfaisal/cycle-close
 cd cycle-close
 python3 cycle-close.py
 ```
