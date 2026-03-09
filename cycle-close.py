@@ -496,6 +496,7 @@ def view_projects():
     divider()
     print()
     print(f"  {DKGREY} P {R} {CREAM}Change project status{R}")
+    print(f"  {DKGREY} R {R} {CREAM}Rename a project{R}")
     print(f"  {DKGREY} V {R} {CREAM}View project cycles{R}")
     print(f"  {DKGREY} Enter {R} {CREAM}Back to menu{R}")
     print()
@@ -503,6 +504,8 @@ def view_projects():
 
     if raw == "P":
         change_project_status(data)
+    elif raw == "R":
+        rename_project(data)
     elif raw == "V":
         view_project_cycles(data)
 
@@ -527,6 +530,52 @@ def change_project_status(data):
     data["projects"][pname]["status"] = status
     save_data(data)
     print(f"\n  {GREEN}✓ {ORANGE}{pname}{R} → {status}{R}")
+    input(f"\n  {DKGREY}Press Enter...{R}")
+
+def rename_project(data):
+    projects = list(data["projects"].keys())
+    if not projects:
+        return
+    print(f"\n  {CREAM}Which project to rename?{R}\n")
+    for i, p in enumerate(projects, 1):
+        status = data["projects"][p].get("status", "active")
+        scol = GREEN if status == "active" else YELLOW if status == "paused" else GREY
+        n = len(data["projects"][p].get("cycles", []))
+        print(f"  {DKGREY} {i} {R} {ORANGE}{p}  {scol}[{status}]{R}  {GREY}{n} cycles{R}")
+    print()
+    raw = input(f"  {CYAN}› {R}").strip()
+    if not raw.isdigit() or not (1 <= int(raw) <= len(projects)):
+        return
+    old_name = projects[int(raw) - 1]
+
+    print(f"\n  {GREY}Renaming: {ORANGE}{B}{old_name}{R}\n")
+    new_name = prompt("New project name", allow_empty=False)
+    if not new_name or new_name == old_name:
+        print(f"  {YELLOW}No change made.{R}")
+        input(f"\n  {DKGREY}Press Enter...{R}")
+        return
+    if new_name in data["projects"]:
+        print(f"  {RED}✗ A project named '{new_name}' already exists.{R}")
+        input(f"\n  {DKGREY}Press Enter...{R}")
+        return
+
+    if not confirm(f"  Rename '{old_name}' → '{new_name}'?"):
+        print(f"  {GREY}Cancelled.{R}")
+        input(f"\n  {DKGREY}Press Enter...{R}")
+        return
+
+    # Rename in projects dict
+    data["projects"][new_name] = data["projects"].pop(old_name)
+
+    # Update all cycles that reference the old name
+    updated = 0
+    for c in data["cycles"]:
+        if c["project"] == old_name:
+            c["project"] = new_name
+            updated += 1
+
+    save_data(data)
+    print(f"\n  {GREEN}✓ Renamed {ORANGE}{old_name}{R} → {ORANGE}{B}{new_name}{R}  {GREY}({updated} cycles updated){R}")
     input(f"\n  {DKGREY}Press Enter...{R}")
 
 def view_project_cycles(data):
